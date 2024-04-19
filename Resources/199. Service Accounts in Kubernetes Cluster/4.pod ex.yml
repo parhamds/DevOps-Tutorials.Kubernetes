@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: upf
+  labels:
+    release: sd-core
+    app: upf
+spec:
+  replicas: 1
+  serviceName: upf-headless
+  selector:
+    matchLabels:
+      release: sd-core
+      app: upf
+  template:
+    metadata:
+      labels:
+        release: sd-core
+        app: upf
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+          {
+            "name": "access-net",
+            "interface": "access",
+            "ips": ["192.168.252.61/24"]
+          },
+          {
+            "name": "core-net",
+            "interface": "core",
+            "ips": ["192.168.250.61/24"]
+          }
+        ]'
+    spec:
+      serviceAccountName: my-serviceaccount
+      shareProcessNamespace: true
+      imagePullSecrets:
+        - name: aether.registry
+      containers:
+      - name: pfcp-agent
+        image: "parhamds/upf-scaler-pfcpiface:v0.2.45"
+        imagePullPolicy: "IfNotPresent"
+        command: ["pfcpiface"]
+        args:
+          - -config
+          - /tmp/conf/upf.json
+        volumeMounts:
+          - name: shared-app
+            mountPath: /pod-share
+          - name: configs
+            mountPath: /tmp/conf
+      volumes:
+      - name: configs
+        configMap:
+          name: upf
+          defaultMode: 493
+      - name: shared-app
+        emptyDir: {}

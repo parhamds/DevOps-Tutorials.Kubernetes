@@ -1,0 +1,14 @@
+sudo apt update
+apt install apache2-utils
+htpasswd -c .htpasswd user
+// enter password
+ls -a
+cat .htpasswd
+kubectl create secret generic <secret_name> -f .htpasswd
+rm -rf .htpasswd
+// create nginx.conf
+kubectl create configmap <confmap_name> -f nginx.conf
+// create nginx.yaml
+kubectl apply -f nginx.yaml
+kubectl get pods -o wide // get ip of pod
+curl -u <user>:<pass> <pod_ip> // user pass should be specified in curl cmd
